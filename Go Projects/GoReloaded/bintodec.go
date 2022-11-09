@@ -6,16 +6,12 @@ import (
 )
 
 func main() {
-	var binary string
-	fmt.Print("Enter Binary Number:")
-	fmt.Scanln(&binary)
-	output, err := strconv.ParseInt(binary, 2, 64)
+	bin_num := "101010"
+	dec_num, err := strconv.ParseInt(bin_num, 2, 64)
 	if err != nil {
-		fmt.Println(err)
-		return
+		panic(err)
 	}
-
-	fmt.Printf("Output %d", output)
+	fmt.Println("decimal number is:", dec_num)
 }
 
 /* This function converts binary to decimal
