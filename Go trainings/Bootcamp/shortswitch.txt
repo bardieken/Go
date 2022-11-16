@@ -1,0 +1,4 @@
+switch i := 10; (true) {//true yazmiyoruz cunku default zaten var o yuzden 
+sadece sperator ; kullaniyoruz
+case i > 0:
+}
