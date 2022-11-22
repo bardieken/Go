@@ -1,181 +1,134 @@
-// https://github.com/Falusvampen/Go-Reloaded
 package main
-
 import (
-	"log"
+	"fmt"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 )
-
 func main() {
 	args := os.Args[1:]
-	if len(args) == 2 {
-		input := args[0]
-		// output args[1]
-		// read input files
-		content, err := os.ReadFile(input)
-		if err != nil {
-			log.Fatal(err)
-		}
-		// write string to output file args[1]
-		os.WriteFile(args[1], []byte(finalizeOutput(parser(content))), 0644)
-	} else {
-		log.Fatal("Enter input and output file")
-	}
-}
-
-//                                                   functions
-//----------------------------------------------------------------------------------------------------------------------------------
-
-// this function is created to be used after the parser function to finalize and correct the output
-func finalizeOutput(results []string) string {
-	strResult := strings.Join(results, " ")
-	trimWhite := regexp.MustCompile(`\s+`)
-	strResult = trimWhite.ReplaceAllString(strResult, " ")
-	// separate ?,.!:; from words with spaces between them
-	symbols := []string{",", ".", ":", ";", "!", "?"}
-	for _, v := range symbols {
-		// this if statement corrects the apostrophe issue with it being separated from the word
-		if !strings.Contains(strResult, v+"'") {
-			strResult = strings.ReplaceAll(strResult, " "+v, v+" ")
-		}
-		// if the last character is a whitespace then remove it
-		if strResult[len(strResult)-1:] == " " {
-			strResult = strResult[:len(strResult)-1]
-		}
-	}
-	for _, v := range symbols {
-		strResult = strings.ReplaceAll(strResult, " "+v, v)
-	}
-	strResult = trimWhite.ReplaceAllString(strResult, " ")
-	return strResult
-}
-
-// removeIndex removes an element from a slice which is in this case used for removing the ends in ex "(cap, 2)"" which removes "2)"
-func removeIndex(s []string, index int) []string {
-	return append(s[:index], s[index+1:]...)
-}
-
-// take string and remove all non digits and return int which is used to determine ex how many letters should be capitalized
-func removeNonDigits(s string) int {
-	re := regexp.MustCompile("[^0-9]+")
-	output, err := strconv.Atoi(re.ReplaceAllString(s, ""))
-	if err != nil {
-		log.Fatal(err)
-	}
-	return output
-}
-
-// This function converts hexadecimal numbers to decimal
-func hexNumToInt(hexaString string) string {
-	hexaString = strings.ReplaceAll(hexaString, "0x", "")
-	hexaString = strings.ReplaceAll(hexaString, "0X,", "")
-	output, err := strconv.ParseInt(hexaString, 16, 64)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return strconv.Itoa(int(output))
-}
-
-// This function converts binary to decimal
-func binToDec(binString string) string {
-	output, err := strconv.ParseInt(binString, 2, 64)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return strconv.Itoa(int(output))
-}
-
-// this function is the heart of the program, it takes the input file and parses it into a slice of strings which will be used in the finalize function
-func parser(content []byte) []string {
-	words := strings.Fields(string(content))
-	var results []string
-	apostropheCount := 0
-	for i := len(words) - 1; i >= 0; i-- {
-		switch words[i] {
-		case "(hex)":
-			i--
-			results = append(results, hexNumToInt(words[i]))
-		case "(bin)":
-			i--
-			results = append(results, binToDec(words[i]))
-		case "(up)":
-			i--
-			results = append(results, strings.ToUpper(words[i]))
-		case "(up,":
-			upMod := removeNonDigits(words[i+1])
-			// apply toUpper to the next upMod words
-			results = removeIndex(results, len(results)-1)
-			for j := 0; j < upMod; j++ {
-				i--
-				results = append(results, strings.ToUpper(words[i]))
-				if i == 0 {
-					break
-				}
+	// reading first file
+	givenText, _ := os.ReadFile(args[0])
+	// array to push the words into
+	words := strings.Split(string(givenText), " ")
+	for i, word := range words {
+		if word == "(up)" {
+			words[i-1] = strings.ToUpper(words[i-1])
+			words = append(words[:i], words[i+1:]...)
+		} else if word == "(low)" {
+			words[i-1] = strings.ToLower(words[i-1])
+			words = append(words[:i], words[i+1:]...)
+		} else if word == "(cap)" {
+			words[i-1] = strings.Title(words[i-1])
+			words = append(words[:i], words[i+1:]...)
+		} else if word == "(hex)" {
+			words[i-1] = HextoInt(words[i-1])
+			words = append(words[:i], words[i+1:]...)
+		} else if word == "(bin)" {
+			words[i-1] = BintoInt(words[i-1])
+			words = append(words[:i], words[i+1:]...)
+			// upper with number
+		} else if word == "(up," {
+			b := strings.Trim(string(words[i+1]), words[i+1][1:])
+			number, _ := strconv.Atoi(string(b))
+			for j := 1; j <= number; j++ {
+				words[i-j] = strings.ToUpper(words[i-j])
 			}
-		case "(low)":
-			i--
-			results = append(results, strings.ToLower(words[i]))
-		case "(low,":
-			lowMod := removeNonDigits(words[i+1])
-			// apply toUpper to the next upMod words
-			results = removeIndex(results, len(results)-1)
-			for j := 0; j < lowMod; j++ {
-				if i == 0 {
-					break
-				}
-				i--
-				results = append(results, strings.ToLower(words[i]))
+			words = append(words[:i], words[i+2:]...)
+			// lower with number
+		} else if word == "(low," {
+			b := strings.Trim(string(words[i+1]), words[i+1][1:])
+			number, _ := strconv.Atoi(string(b))
+			for j := 1; j <= number; j++ {
+				words[i-j] = strings.ToLower(words[i-j])
 			}
-		case "(cap,":
-			capMod := removeNonDigits(words[i+1])
-			// apply toUpper to the next upMod words
-			results = removeIndex(results, len(results)-1)
-			for j := 0; j < capMod; j++ {
-				i--
-				results = append(results, strings.Title(strings.ToLower(words[i])))
-				if i == 0 {
-					break
-				}
+			words = append(words[:i], words[i+2:]...)
+			// capitalize with num
+		} else if word == "(cap," {
+			b := strings.Trim(string(words[i+1]), words[i+1][1:])
+			number, _ := strconv.Atoi(string(b))
+			for j := 1; j <= number; j++ {
+				words[i-j] = strings.Title(words[i-j])
 			}
-		case "(cap)":
-			i--
-			results = append(results, strings.Title(strings.ToLower(words[i])))
-		case "a":
-			// Turn a into an if next word starts with a vowel
-			if strings.ContainsAny(string(words[i+1][0]), "aeiouhAEIOUH") {
-				results = append(results, "an")
-			} else {
-				results = append(results, "a")
-			}
-		case "A":
-			// Turn A into an if next word starts with a vowel
-			if strings.ContainsAny(string(words[i+1][0]), "aeiouhAEIOUH") {
-				results = append(results, "An")
-			} else {
-				results = append(results, "A")
-			}
-
-		case "'":
-			if apostropheCount == 0 {
-				words[i-1] = words[i-1] + "'"
-				apostropheCount++
-			} else {
-				results = removeIndex(results, len(results)-1)
-				results = append(results, "'"+words[i+1])
-				apostropheCount = 0
-			}
-		default:
-			if strings.Contains(words[i], "'") {
-				apostropheCount++
-			}
-			results = append(results, words[i])
+			words = append(words[:i], words[i+2:]...)
 		}
 	}
-	for i, j := 0, len(results)-1; i < j; i, j = i+1, j-1 {
-		results[i], results[j] = results[j], results[i]
+	ChangeA(words)
+	// join slice
+	needed := strings.Join(Punctuations(words), " ")
+	// write file, automatically updates manipulated file.
+	man := os.WriteFile(args[1], []byte(needed), 0o644)
+	if man != nil {
+		panic(man)
 	}
-	return results
+}
+// conv hex to int
+func HextoInt(hex string) string {
+	number, _ := strconv.ParseInt(hex, 16, 64)
+	return fmt.Sprint(number)
+}
+// conv binary to int
+func BintoInt(bin string) string {
+	number, _ := strconv.ParseInt(bin, 2, 64)
+	return fmt.Sprint(number)
+}
+func ChangeA(s []string) []string {
+	vowels := []string{"a", "e", "i", "o", "u", "h", "A", "E", "I", "O", "U", "H"}
+	for i, word := range s {
+		for _, letter := range vowels {
+			if word == "a" && string(s[i+1][0]) == letter {
+				s[i] = "an"
+			} else if word == "A" && string(s[i+1][0]) == letter {
+				s[i] = "An"
+			}
+		}
+	}
+	return s
+}
+func Punctuations(s []string) []string {
+	puncs := []string{",", ".", "!", "?", ":", ";"}
+	// punc in the middle of a string connecting to word after
+	for i, word := range s {
+		for _, punc := range puncs {
+			if string(word[0]) == punc && string(word[len(word)-1]) != punc {
+				s[i-1] += punc
+				s[i] = word[1:]
+			}
+		}
+	}
+	// punc at end of string
+	for i, word := range s {
+		for _, punc := range puncs {
+			if (string(word[0]) == punc) && (s[len(s)-1] == s[i]) {
+				s[i-1] += word
+				s = s[:len(s)-1]
+			}
+		}
+	}
+	// punc in middle of string
+	for i, word := range s {
+		for _, punc := range puncs {
+			if string(word[0]) == punc && string(word[len(word)-1]) == punc && s[i] != s[len(s)-1] {
+				s[i-1] += word
+				s = append(s[:i], s[i+1:]...)
+			}
+		}
+	}
+	// for apostrophe
+	count := 0
+	for i, word := range s {
+		if word == "'" && count == 0 {
+			count += 1
+			s[i+1] = word + s[i+1]
+			s = append(s[:i], s[i+1:]...)
+		}
+	}
+	//  for second apostrophe
+	for i, word := range s {
+		if word == "'" {
+			s[i-1] = s[i-1] + word
+			s = append(s[:i], s[i+1:]...)
+		}
+	}
+	return s
 }
