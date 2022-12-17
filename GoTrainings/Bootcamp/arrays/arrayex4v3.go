@@ -1,10 +1,6 @@
 package main
 
-import (
-	"fmt"
-	"strings"
-)
-
+/*
 func main() {
 	books := []string{"The Hobbit", "The Lord of the Rings", "The Silmarillion"}
 	upper := map(strings.ToUpper, books)
@@ -14,3 +10,4 @@ func main() {
 	fmt.Printf("upper: %q\n", upper)
 	fmt.Printf("lower: %q\n", lower)
 }
+*/
