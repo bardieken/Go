@@ -8,20 +8,25 @@ import (
 
 func main() {
 	args := os.Args
-	if len(args) < 2 || len(args) > 6 {
+	if len(args) < 2 || len(args) > 5 {
 		fmt.Println("Please tell me numbers (maximum 5 numbers)")
 		// fmt.Println(len(args))
-		os.Exit(0)
+		return
 	}
-	for 
-		
+	var (
+		sum   float64
+		nums  [5]float64
+		total float64
+	)
+	for i, v := range args {
+		n, err := strconv.ParseFloat(v, 64)
+		if err != nil {
+			continue
+		}
+		total++
+		nums[i] = n
+		sum += n
 	}
-
-	numbers := args
-	var avrg float64
-	for _, number := range numbers {
-		avrg += float64(number)
-	}
-	fmt.Println("Your numbers are: ", numbers)
-	fmt.Println("Avarage: ")
+	fmt.Println("Your numbers:", nums)
+	fmt.Println("Average:", sum/total)
 }
