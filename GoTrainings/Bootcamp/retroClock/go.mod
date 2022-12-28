@@ -1,4 +1,4 @@
-module clock
+module retroClock
 
 go 1.19
 
