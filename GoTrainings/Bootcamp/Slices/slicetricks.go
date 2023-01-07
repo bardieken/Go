@@ -47,3 +47,5 @@ func del1() {
 	copy(c, a)
 	c = append(c[:2], c[3:]...)
 }
+
+// lyric = append([]string{"yesterday"}, lyric...) preappend!
